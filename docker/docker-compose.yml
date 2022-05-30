@@ -1,0 +1,49 @@
+version: '3.9'
+
+volumes:
+  db_volume: {}
+
+services:
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: maindb
+      POSTGRES_DBNAME: maindb
+      ALLOW_IP_RANGE: 0.0.0.0/0
+    ports:
+      - 5432:5432
+    volumes:
+          # this command will create database as described in init file 
+     # - .:/docker-entrypoint-initdb.d/       
+      - db_volume:/var/lib/postgresql
+  app:
+     build:
+        context: ../
+        dockerfile: app.dockerfile
+     ports:
+      - 8000:8000
+     depends_on:
+      - db
+     restart: on-failure
+     command: ["uvicorn", "main:app", "--host", "0.0.0.0"]
+  celery:
+    build:
+        context: ../celery
+        dockerfile: celery.dockerfile
+    depends_on:
+     - db
+     - rabbit
+    restart: on-failure
+    command: bash -c "celery -A main.celery_app worker --beat"
+  rabbit:
+    image: rabbitmq:3
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:   
+    - RABBITMQ_DEFAULT_USER=admin
+    - RABBITMQ_DEFAULT_PASS=password
