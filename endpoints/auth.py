@@ -3,11 +3,12 @@ from fastapi import APIRouter, Depends
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from domain.deps.deps import dummy, get_service_collection
-from domain.schemas.schemas import ConfirmUser, Login, RegisterUser
+from domain.schemas.schemas import ConfirmUser, Login, RegisterUser, ResetUser
 from domain.usecases.auth_service import AuthService
 from domain.usecases.user_crud import CrudUser
 from status_codes.status_codes import StatusCodes
 from domain.config.read import ConfigReader
+from utils.utils import verify_jwt
 
 
 auth_router = APIRouter()
@@ -50,3 +51,20 @@ async def login(model: Login, session: AsyncSession = Depends(dummy)) -> Any:
             service_cache[AuthService]
         token = await service.login(session, model.dict())
         return token
+
+
+@auth_router.post("/change")
+async def change_data(token: str,
+                      email: str,
+                      password: str,
+                      data: ResetUser,
+                      session: AsyncSession =
+                      Depends(dummy)) -> bool:
+    async with session.begin():
+        crud: CrudUser = service_collection_ref.crud_cache[CrudUser]
+        if not await verify_jwt(token, crud, session):
+            return False
+        service: AuthService = service_collection_ref.\
+            service_cache[AuthService]
+        return await service.change_data(email, password, data.dict(),
+                                         session)

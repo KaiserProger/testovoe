@@ -32,3 +32,12 @@ class Login(BaseModel):
 class CreateAccount(BaseModel):
     user_uuid: UUID
     currency_tag: str
+
+
+class ResetUser(BaseModel):
+    phone_number: Optional[str] = None
+    email: Optional[str] = None
+    password: Optional[str] = None
+    name: Optional[str] = None
+    surname: Optional[str] = None
+    last_name: Optional[str] = None

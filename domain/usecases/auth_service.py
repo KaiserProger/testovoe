@@ -49,3 +49,19 @@ class AuthService:
     async def confirm(self, uid: UUID, code: int,
                       session: AsyncSession) -> StatusCodes:
         return await self.crud.confirm(uid, code, session)
+
+    async def change_data(self,
+                          email: str,
+                          password: str,
+                          data_dict: dict[str, Any],
+                          session: AsyncSession) -> bool:
+        if not self.login(session, {"email": email,
+                                    "password": password}):
+            return False
+        u = await self.crud.read_by_email(email, session)
+        if u is None:
+            return False
+        for i in data_dict:
+            if i is not None or i != "":
+                setattr(u, i, data_dict[i])
+        return True
