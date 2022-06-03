@@ -33,7 +33,7 @@ async def x() -> None:
 
 celery_app.conf.beat_schedule = {
     'upload': {
-        'task': 'celery_main.x',
+        'task': 'celery_app.x',
         'schedule': 60 * 60 * 24,
     }
 }
